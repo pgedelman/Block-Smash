@@ -13,12 +13,12 @@ window.addEventListener('load', function() {
             this.width = width;
             this.height = height;
             this.draggingBlock = null;
-            this.bar = new Bar(new Rect(600, 0, 125, canvas.height));
+            this.bar = new Bar(new Rect(canvas.height, 0, canvas.width - canvas.height, canvas.height));
             this.grid = [];
             for (let i = 0; i < 10; i++) {
                 let place = [];
                 for (let j = 0; j < 10; j++) {
-                    place.push(new Tile(new Rect(j * 60, i * 60, 60, 60)));
+                    place.push(new Tile(i, j, new Rect(j * 60, i * 60, 60, 60)));
                 }
                 this.grid.push(place);
             }
@@ -31,6 +31,74 @@ window.addEventListener('load', function() {
             }
             this.bar.draw(context);
         }
+        mouseDown(x, y) {
+            console.log(this);
+            for (let block of this.bar.blocks) {
+                if (block.draggable) {
+                    for (let square of block.squares) {
+                        if (square.contains(x, y)) {
+                            this.draggingBlock = block;
+                            this.draggingBlock.squareWidth = 60;
+                            block.dragging = true;
+                            block.offsetX = x - block.x;
+                            block.offsetY = y - block.y;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        mouseMove(x, y) {
+            // console.log("X: ", x, " | Y: ", y);
+            if (this.draggingBlock) {
+                this.draggingBlock.x = x - this.draggingBlock.offsetX;
+                this.draggingBlock.y = y - this.draggingBlock.offsetY;
+                this.draggingBlock.update();
+                let containsIndexPoint = null;
+                for (let row of this.grid) {
+                    for (let tile of row) {
+                        tile.rect.selected = false;
+                        if (tile.rect.contains(this.draggingBlock.indexPoint.x, this.draggingBlock.indexPoint.y)) containsIndexPoint = tile;
+                    }
+                }
+                if (containsIndexPoint) {
+                    this.draggingBlock.select(containsIndexPoint.row, containsIndexPoint.col)
+                    if (!this.draggingBlock.selectedTiles) return;
+                    for (let i of this.draggingBlock.selectedTiles) {
+                        this.grid[i[0]][i[1]].rect.selected = true;
+                    }
+                }
+            }
+        }
+        mouseUp() {
+            if (this.draggingBlock) {
+                if (this.draggingBlock.selectedTiles) {
+                    for (let row of this.grid) {
+                        for (let tile of row)
+                        if (tile.rect.selected) tile.occupyTile(this.draggingBlock.color);
+                        for (let i in this.bar.blocks) {
+                            if (this.bar.blocks[i].originY === this.draggingBlock.originY) {
+                                this.bar.blocks.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+                    this.draggingBlock.draggable = false;
+                } else {
+                    this.draggingBlock.reset();
+                }
+                this.draggingBlock.selectedTiles = null;
+                this.draggingBlock = null;
+                this.unselectGrid();
+            }
+        }
+        unselectGrid() {
+            for (let row of this.grid) {
+                for (let tile of row) {
+                    tile.rect.selected = false;
+                }
+            }
+        }
     }
 
     const game = new Game(canvas.width, canvas.height);
@@ -40,56 +108,22 @@ window.addEventListener('load', function() {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-    
-        for (let block of game.bar.blocks) {
-            if (block.draggable) {
-                for (let square of block.squares) {
-                    if (square.contains(x, y)) {
-                        game.draggingBlock = block;
-                        block.dragging = true;
-                        block.offsetX = x - block.x;
-                        block.offsetY = y - block.y;
-                        break;
-                    }
-                }
-            }
-        }
+        game.mouseDown(x, y);
     });
 
     canvas.addEventListener('mouseup', () => {
-        if (game.draggingBlock) {
-            game.draggingBlock.dragging = false;
-            game.draggingBlock.draggable = false;
-            game.draggingBlock = null;
-        }
+        game.mouseUp();
     });
 
     canvas.addEventListener('mousemove', (event) => {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        let hoverChanged = false;
-
-        if (game.draggingBlock) {
-            game.draggingBlock.squareWidth = 60;
-            game.draggingBlock.x = x - game.draggingBlock.offsetX;
-            game.draggingBlock.y = y - game.draggingBlock.offsetY;
-            game.draggingBlock.update();
-            console.log(game);
-        }
-
-        for (let row of game.grid) {
-            for (let tile of row) {
-                const wasHovered = tile.rect.hovered;
-                tile.rect.hovered = tile.rect.contains(x, y);
-                if (tile.rect.hovered !== wasHovered) {
-                    hoverChanged = true;
-                }
-            }
-        }
+        game.mouseMove(x, y);
     });
 
     function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         game.draw(ctx);
         requestAnimationFrame(animate);
     }

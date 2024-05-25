@@ -8,12 +8,14 @@ export class Bar {
     generateBlocks() {
         let blocks = [];
         for (let i = 100; i < 600; i += 200) {
-            blocks.push(new Block(i, Math.floor(Math.random() * 3 + 1))); // Should be 22 or more
+            blocks.push(new Block(i, Math.floor(Math.random() * 4 + 18))); // Should be 22 or more
         }
         return blocks;
     }
     update() {
-
+        if (this.blocks.length === 0) {
+            this.blocks = this.generateBlocks();
+        }
     }
     draw(context) {
         context.fillStyle = 'rgb(72, 137, 204)';

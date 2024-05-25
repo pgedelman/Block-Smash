@@ -16,7 +16,7 @@ export class Tile {
         this.color = color;
         this.occupied = true;
     }
-    emptyTile() {
+    smash() {
         this.color = tileColor;
         this.occupied = false;
     }

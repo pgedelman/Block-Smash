@@ -422,7 +422,6 @@ export class Block {
         this.selectedTiles = selectedTiles;
     }
     reset() {
-        console.log(this.type)
         this.x = this.originX;
         this.y = this.originY;
         this.offsetX = 0;

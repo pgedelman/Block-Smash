@@ -95,13 +95,11 @@ window.addEventListener('load', function() {
                     this.draggingBlock.select(containsIndexPoint.row, containsIndexPoint.col)
                     if (!this.draggingBlock.selectedTiles) return; 
                     for (let i of this.draggingBlock.selectedTiles) {
-                        console.log(i);
                         if (this.grid[i[0]][i[1]].occupied) {
                             this.validSelected = false;
                             return;
                         }
                     }
-                    console.log("asdf");
                     for (let i of this.draggingBlock.selectedTiles) {
                         this.grid[i[0]][i[1]].rect.selected = true;
                     }
@@ -160,9 +158,6 @@ window.addEventListener('load', function() {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
         game.clickBlock(x, y);
-        for (let i of game.bar.blocks) {
-            console.log(i.type)
-        }
     });
 
     canvas.addEventListener('mouseup', () => {

@@ -1,5 +1,3 @@
-import { Rect } from './rect.js';
-
 const backgroundColor = 'rgb(72, 137, 204)';
 const tileColor = 'rgb(144, 192, 241)';
 const selectedColor = 'rgb(134, 179, 224)';

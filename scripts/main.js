@@ -1,6 +1,7 @@
 import { Rect } from './rect.js';
 import { Tile } from './tiles.js';
 import { Bar } from './bar.js';
+//import { Analysis } from './analysis.js';
 
 window.addEventListener('load', function() {
     const canvas = document.getElementById('canvas');
@@ -24,6 +25,7 @@ window.addEventListener('load', function() {
                 this.grid.push(place);
             }
             this.points = 0;
+            this.info = {}
         }
         draw(context) {
             for (let row of this.grid) {
@@ -32,6 +34,9 @@ window.addEventListener('load', function() {
                 }
             }
             this.bar.draw(context);
+        }
+        analyze() {
+            let a = Analysis(this.grid, this.bar.blocks);
         }
         clickBlock(x, y) {
             console.log(x, y);
@@ -59,7 +64,6 @@ window.addEventListener('load', function() {
                         for (let i in this.bar.blocks) {
                             if (this.bar.blocks[i].originY === this.draggingBlock.originY) {
                                 this.bar.blocks.splice(i, 1);
-                                console.log(1);
                                 this.points += this.draggingBlock.squares.length;
                                 break;
                             }

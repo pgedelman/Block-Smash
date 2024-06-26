@@ -8,7 +8,7 @@ export class Bar {
     generateBlocks() {
         let blocks = [];
         for (let i = 100; i < 600; i += 200) {
-            blocks.push(new Block(i, Math.floor(Math.random() * (20 - 1 + 1) + 1))); // Should be 22 or more
+            blocks.push(new Block(i, Math.floor(Math.random() * (20 - 1 + 1) + 1), (i-100) / 200 + 1)); // Should be 22 or more
         }
         return blocks;
     }

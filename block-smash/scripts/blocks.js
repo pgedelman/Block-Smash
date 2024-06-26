@@ -3,7 +3,8 @@ import { Rect, Point } from './rect.js';
 const backgroundColor = 'rgb(72, 137, 204)';
 
 export class Block {
-    constructor(y, type) {
+    constructor(y, type, order) {
+        this.order = order;
         this.type = type;
         this.color = 'rgb(0, 0, 0)';
         this.x = 662;
@@ -161,7 +162,7 @@ export class Block {
                 structure.push([0, 0]);
                 squares.push(new Rect(this.x, this.y, this.squareWidth, this.squareWidth));
                 for (let i = 1; i < 3; i++) {
-                    structure.push([i, i]);
+                    structure.push([i, 0], [0, i]);
                     squares.push(new Rect(this.x + i * this.squareWidth, this.y, this.squareWidth, this.squareWidth));
                     squares.push(new Rect(this.x, this.y + i * this.squareWidth, this.squareWidth, this.squareWidth));
                 }

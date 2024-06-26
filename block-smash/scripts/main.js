@@ -1,7 +1,7 @@
 import { Rect } from './rect.js';
 import { Tile } from './tiles.js';
 import { Bar } from './bar.js';
-//import { Analysis } from './analysis.js';
+import { Analysis } from './analysis.js';
 
 window.addEventListener('load', function() {
     const canvas = document.getElementById('canvas');
@@ -36,7 +36,15 @@ window.addEventListener('load', function() {
             this.bar.draw(context);
         }
         analyze() {
-            let a = Analysis(this.grid, this.bar.blocks);
+            let analysis = new Analysis(this.grid, this.bar.blocks);
+            let analysisData = analysis.findValidPlacement();
+            this.info = {
+                points: this.points,
+                num_options: analysisData[0],
+                options: analysisData.slice(1),
+            };
+            exportData(this.info);
+            console.log(this.info);
         }
         clickBlock(x, y) {
             console.log(x, y);
@@ -44,6 +52,7 @@ window.addEventListener('load', function() {
                 if (block.draggable) {
                     for (let square of block.squares) {
                         if (square.contains(x, y)) {
+                            console.log(block.type);
                             this.draggingBlock = block;
                             this.draggingBlock.squareWidth = 60;
                             block.dragging = true;
@@ -56,6 +65,7 @@ window.addEventListener('load', function() {
             }
         }
         unclickBlock() {
+            let blockPlaced = false;
             if (this.draggingBlock) {
                 if (this.draggingBlock.selectedTiles && this.validSelected) {
                     for (let row of this.grid) {
@@ -70,6 +80,7 @@ window.addEventListener('load', function() {
                         }
                     }
                     this.draggingBlock.draggable = false;
+                    blockPlaced = true; 
                 } else {
                     this.draggingBlock.reset();
                 }
@@ -78,7 +89,10 @@ window.addEventListener('load', function() {
                 this.draggingBlock = null;
                 this.unselectGrid();
             }
-            this.bar.update();
+            if (blockPlaced) {
+                this.bar.update();
+                this.analyze();
+            }
         }
         dragBlock(x, y) {
             if (this.draggingBlock) {
@@ -185,3 +199,16 @@ window.addEventListener('load', function() {
     }
     animate();
 });
+
+function exportData(data) {
+    fetch('/game-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    }).then(response => response.json())
+      .then(d => console.log('Success:', d))
+      .catch((error) => console.error('Error:', error));
+    
+}

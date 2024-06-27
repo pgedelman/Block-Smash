@@ -2,6 +2,7 @@ import { Rect } from './rect.js';
 import { Tile } from './tiles.js';
 import { Bar } from './bar.js';
 import { Analysis } from './analysis.js';
+import { LostScreen } from './lost.js';
 
 export class Game {
     constructor(width, height) {
@@ -19,6 +20,7 @@ export class Game {
         }
         this.points = 0;
         this.info = {}
+        this.lost = null;
     }
     draw(context) {
         for (let row of this.grid) {
@@ -27,6 +29,9 @@ export class Game {
             }
         }
         this.bar.draw(context);
+        if (this.lost) {
+            this.lost.draw(context, this.width / 2, this.height /2);
+        }
     }
     analyze() {
         let analysis = new Analysis(this.grid, this.bar.blocks);
@@ -36,6 +41,9 @@ export class Game {
             num_options: analysisData[0],
             options: analysisData.slice(1),
         };
+        if (this.info.num_options === 0) {
+            this.lost = new LostScreen(this.points, this.width, this.height);
+        }
         console.log(this.info);
     }
     clickBlock(x, y) {

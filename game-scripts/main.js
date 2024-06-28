@@ -1,6 +1,6 @@
 import { Rect } from './rect.js';
-import { Tile } from './tiles.js';
 import { Bar } from './bar.js';
+import { Grid } from './tiles.js';
 import { LostScreen } from './lost.js';
 
 export class Game {
@@ -9,40 +9,22 @@ export class Game {
         this.height = height;
         this.draggingBlock = null;
         this.bar = new Bar(new Rect(canvas.height, 0, canvas.width - canvas.height, canvas.height));
-        this.grid = [];
-        for (let i = 0; i < 10; i++) {
-            let place = [];
-            for (let j = 0; j < 10; j++) {
-                place.push(new Tile(i, j, new Rect(j * 60, i * 60, 60, 60)));
-            }
-            this.grid.push(place);
-        }
+        this.grid = new Grid();
         this.points = 0;
         this.info = {}
         this.analyze();
         this.lost = null;
     }
-    draw(context) {
-        for (let row of this.grid) {
-            for (let tile of row) {
-                tile.draw(context);
-            }
-        }
-        this.bar.draw(context);
-        if (this.lost) {
-            this.lost.draw(context, this.width / 2, this.height /2);
-        }
-    }
     analyze() {
         let num_options = 0;
         let options = {};
         for (let block of this.bar.blocks) {
-            block.validPlaces = block.findValidPlacement(this.grid)
+            block.validPlaces = block.findValidPlacement(this.grid.tiles)
             options[block.type] = block.validPlaces;
             num_options += block.validPlaces.reduce((a, c) => a + c, 0); 
         }
         let grid = [];
-        for (let row of this.grid) {
+        for (let row of this.grid.tiles) {
             for (let tile of row) {
                 if (tile.occupied) grid.push(0);
                 else grid.push(1);
@@ -81,7 +63,7 @@ export class Game {
         let blockPlaced = false;
         if (this.draggingBlock) {
             if (this.draggingBlock.selectedTiles) {
-                for (let row of this.grid) {
+                for (let row of this.grid.tiles) {
                     for (let tile of row)
                     if (tile.rect.selected) tile.occupyTile(this.draggingBlock.color);
                     for (let i in this.bar.blocks) {
@@ -99,10 +81,11 @@ export class Game {
             }
             this.draggingBlock.selectedTiles = null;
             this.draggingBlock = null;
-            this.unselectGrid();
+            this.grid.unselectGrid();
         }
         if (blockPlaced) {
             this.bar.update();
+            this.points += this.grid.smashTiles();
             this.analyze();
         }
     }
@@ -112,7 +95,7 @@ export class Game {
             this.draggingBlock.y = y - this.draggingBlock.offsetY;
             this.draggingBlock.update();
             let containsIndexPoint = null;
-            for (let row of this.grid) {
+            for (let row of this.grid.tiles) {
                 for (let tile of row) {
                     tile.rect.selected = false;
                     if (tile.rect.contains(this.draggingBlock.indexPoint.x, this.draggingBlock.indexPoint.y)) {
@@ -121,60 +104,25 @@ export class Game {
                 }
             }
             if (containsIndexPoint) {
-                this.draggingBlock.select(containsIndexPoint.row, containsIndexPoint.col)
+                this.draggingBlock.selectedTiles = this.draggingBlock.select(containsIndexPoint.row, containsIndexPoint.col)
                 if (!this.draggingBlock.selectedTiles) return; 
                 for (let i of this.draggingBlock.selectedTiles) {
-                    if (this.grid[i[0]][i[1]].occupied) {
+                    if (this.grid.tiles[i[0]][i[1]].occupied) {
                         this.draggingBlock.selectedTiles = null;
                         return;
                     }
                 }
                 for (let i of this.draggingBlock.selectedTiles) {
-                    this.grid[i[0]][i[1]].rect.selected = true;
+                    this.grid.tiles[i[0]][i[1]].rect.selected = true;
                 }
             }
         }
     }
-    smashTiles() {
-        let gettingSmashed = [];
-        for (let i in this.grid) {
-            let fullRowSmashed = true;
-            for (let j in this.grid[i]) {
-                if (!this.grid[i][j].occupied) {
-                    fullRowSmashed = false;
-                }
-            }
-            if (fullRowSmashed) gettingSmashed.push(this.grid[i]);
-        }
-        for (let i in this.grid) {
-            let fullColSmashed = true;
-            for (let j in this.grid[i]) {
-                if (!this.grid[j][i].occupied) {
-                    fullColSmashed = false;
-                }
-            }
-            if (fullColSmashed) {
-                let smashedCol = [];
-                for (let j in this.grid[i]) {
-                    smashedCol.push(this.grid[j][i]);
-                }       
-                gettingSmashed.push(smashedCol);
-            }
-        }
-        for (let group of gettingSmashed) {
-            for (let tile of group) {
-                tile.smash();
-            }
-        }
-        if (gettingSmashed.length > 0) {
-            this.points += 10 * Math.pow(gettingSmashed.length, 2) - 10 * gettingSmashed.length + 15;
-        }
-    }
-    unselectGrid() {
-        for (let row of this.grid) {
-            for (let tile of row) {
-                tile.rect.selected = false;
-            }
+    draw(context) {
+        this.grid.draw(context);
+        this.bar.draw(context);
+        if (this.lost) {
+            this.lost.draw(context, this.width / 2, this.height /2);
         }
     }
 }

@@ -20,7 +20,6 @@ window.addEventListener('load', function() {
 
     canvas.addEventListener('mouseup', () => {
         game.unclickBlock();
-        game.smashTiles();
     });
 
     canvas.addEventListener('mousemove', (event) => {
@@ -76,6 +75,9 @@ window.addEventListener('load', function() {
             });
             if (response.ok) {
                 console.log('Data sent to Flask server');
+                const responseData = await response.json();
+                console.log('Response from Flask:', responseData);
+                // DO SOMETHING WITH DATA
             } else {
                 console.error('Failed to send data to Flask server');
             }

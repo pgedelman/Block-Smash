@@ -1,7 +1,6 @@
 import { Rect } from './rect.js';
 import { Tile } from './tiles.js';
 import { Bar } from './bar.js';
-import { Analysis } from './analysis.js';
 import { LostScreen } from './lost.js';
 
 export class Game {
@@ -20,6 +19,7 @@ export class Game {
         }
         this.points = 0;
         this.info = {}
+        this.analyze();
         this.lost = null;
     }
     draw(context) {
@@ -34,12 +34,25 @@ export class Game {
         }
     }
     analyze() {
-        let analysis = new Analysis(this.grid, this.bar.blocks);
-        let analysisData = analysis.findValidPlacement();
+        let num_options = 0;
+        let options = {};
+        for (let block of this.bar.blocks) {
+            block.validPlaces = block.findValidPlacement(this.grid)
+            options[block.type] = block.validPlaces;
+            num_options += block.validPlaces.reduce((a, c) => a + c, 0); 
+        }
+        let grid = [];
+        for (let row of this.grid) {
+            for (let tile of row) {
+                if (tile.occupied) grid.push(0);
+                else grid.push(1);
+            }
+        }
         this.info = {
             points: this.points,
-            num_options: analysisData[0],
-            options: analysisData.slice(1),
+            grid: grid,
+            num_options: num_options,
+            options: options,
         };
         if (this.info.num_options === 0) {
             this.lost = new LostScreen(this.points, this.width, this.height);
@@ -52,6 +65,7 @@ export class Game {
             if (block.draggable) {
                 for (let square of block.squares) {
                     if (square.contains(x, y)) {
+                        console.log(block.type);
                         this.draggingBlock = block;
                         this.draggingBlock.squareWidth = 60;
                         block.dragging = true;

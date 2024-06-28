@@ -1,10 +1,10 @@
 import { Rect, Point } from './rect.js';
 
 const backgroundColor = 'rgb(72, 137, 204)';
+const maxPlacements = {1: 64, 2: 60, 3: 81, 4: 81, 5: 81, 6: 81, 7: 81, 8: 100, 9: 70, 10: 60, 11: 70, 12: 72, 13: 72, 14: 90, 15: 64, 16: 64, 17: 64, 18: 64, 19: 80, 20: 80, 21: 90};
 
 export class Block {
-    constructor(y, type, order) {
-        this.order = order;
+    constructor(y, type) {
         this.type = type;
         this.color = 'rgb(0, 0, 0)';
         this.x = 662;
@@ -19,6 +19,7 @@ export class Block {
         [this.structure, this.squares] = this.makeStructure()
         this.indexPoint = new Point(this.squares[0].x + this.squares[0].w / 2, this.squares[0].y + this.squares[0].h / 2);
         this.selectedTiles = null;
+        this.validPlaces = null;
     }
     makeStructure() {
         let structure = [];
@@ -256,6 +257,28 @@ export class Block {
         this.offsetY = 0;
         this.squareWidth = 20;
         [this.structure, this.squares] = this.makeStructure();
+    }
+    findValidPlacement(grid) {
+        let validPlacement = Array(maxPlacements[this.type]);
+        let n = grid.length;
+        let m = grid[0].length;
+        let i = 0;
+        for (let row = 0; row < n; row++) {
+            for (let col = 0; col < m; col++) {
+                if (!grid[row][col].occupied) {
+                    let validOption = 1;
+                    for (let s of this.structure) {
+                        if (row + s[1] > 9 || row + s[1] < 0 || col + s[0] > 9 || col + s[0] < 0 || grid[row + s[1]][col + s[0]].occupied) {
+                            validOption = 0;
+                            break;
+                        }
+                    }
+                    validPlacement[i] = validOption;
+                } else validPlacement[i] = 0;
+                i++;
+            }
+        }
+        return validPlacement;
     }
     update() {
         [this.structure, this.squares] = this.makeStructure();

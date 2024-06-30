@@ -155,7 +155,6 @@ export class Block {
         }
         this.x -= this.squareWidth * (y + 1) / 2;
         this.y -= this.squareWidth * (x + 1) / 2;
-        console.log("DIMS: ", x, y);
         return [structure, x, y];
     }
     select(row, col) {
@@ -184,22 +183,22 @@ export class Block {
         this.squares = this.updateSquares();
     }
     findValidPlacement(grid) {
-        let validPlacement = Array(maxPlacements[this.type]);
+        let validPlacement = [];
         let n = grid.length;
         let m = grid[0].length;
         let i = 0;
-        for (let row = 0; row + this.structureY < n; row++) {
-            for (let col = 0; col + this.structureX < m; col++) {
+        for (let row = 0; row + this.structureX < n; row++) {
+            for (let col = 0; col + this.structureY < m; col++) {
                 if (!grid[row][col].occupied) {
-                    let validOption = 1;
+                    let validOption = [row, col];
                     for (let s of this.structure) {
-                        if (row + s[1] > 9 || row + s[1] < 0 || col + s[0] > 9 || col + s[0] < 0 || grid[row + s[1]][col + s[0]].occupied) {
-                            validOption = 0;
+                        if (grid[row + s[1]][col + s[0]].occupied) {
+                            validOption = [-1, -1];
                             break;
                         }
                     }
                     validPlacement[i] = validOption;
-                } else validPlacement[i] = 0;
+                } else validPlacement[i] = [-1, -1];
                 i++;
             }
         }

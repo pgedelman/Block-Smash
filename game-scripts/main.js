@@ -19,9 +19,13 @@ export class Game {
         let num_options = 0;
         let options = {};
         for (let block of this.bar.blocks) {
-            block.validPlaces = block.findValidPlacement(this.grid.tiles)
-            options[block.type] = block.validPlaces;
-            num_options += block.validPlaces.reduce((a, c) => a + c, 0); 
+            if (block) {
+                block.validPlaces = block.findValidPlacement(this.grid.tiles);
+                options[block.type] = block.validPlaces;
+                for (let i of block.validPlaces) {
+                    num_options += i[0] !== -1;
+                }
+            }
         }
         let grid = [];
         for (let row of this.grid.tiles) {
@@ -44,7 +48,7 @@ export class Game {
     clickBlock(x, y) {
         console.log(x, y);
         for (let block of this.bar.blocks) {
-            if (block.draggable) {
+            if (block && block.draggable) {
                 for (let square of block.squares) {
                     if (square.contains(x, y)) {
                         console.log(block.type);
@@ -67,7 +71,7 @@ export class Game {
                     for (let tile of row)
                     if (tile.rect.selected) tile.occupyTile(this.draggingBlock.color);
                     for (let i in this.bar.blocks) {
-                        if (this.bar.blocks[i].originY === this.draggingBlock.originY) {
+                        if (this.bar.blocks[i] && this.bar.blocks[i].originY === this.draggingBlock.originY) {
                             this.bar.blocks.splice(i, 1);
                             this.points += this.draggingBlock.squares.length;
                             break;
@@ -84,9 +88,7 @@ export class Game {
             this.grid.unselectGrid();
         }
         if (blockPlaced) {
-            this.bar.update();
-            this.points += this.grid.smashTiles();
-            this.analyze();
+            this.update();
         }
     }
     dragBlock(x, y) {
@@ -118,6 +120,11 @@ export class Game {
             }
         }
     }
+    update() {
+        this.bar.update();
+        this.points += this.grid.smashTiles();
+        this.analyze();
+    }
     draw(context) {
         this.grid.draw(context);
         this.bar.draw(context);
@@ -130,5 +137,21 @@ export class Game {
 export class AIGame extends Game {
     constructor(width, height) {
         super(width, height);
+    }
+    placeBlock(blockType, placement) {
+        let block = null;
+        let blockIndex = 0;
+        for (let i of this.bar.blocks) {
+            if (i.type === blockType) {
+                block = i;
+                break;
+            }
+            blockIndex++;
+        }
+        for (let s of block.structure) {
+            this.grid.tiles[block.validPlaces[placement][0] + s[1]][block.validPlaces[placement][1] + s[0]].occupyTile(block.color);
+        }
+        this.bar.blocks.splice(blockIndex, 1);
+        this.update();
     }
 }

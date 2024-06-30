@@ -13,7 +13,7 @@ export class Bar {
         return blocks;
     }
     update() {
-        if (this.blocks.length === 0) {
+        if (this.blocks.length === 0) { 
             this.blocks = this.generateBlocks();
         }
     }
@@ -21,7 +21,7 @@ export class Bar {
         context.fillStyle = 'rgb(72, 137, 204)';
         context.fillRect(this.rect.x, this.rect.y, this.rect.w, this.rect.h);
         for (let block of this.blocks) {
-            block.draw(context);
+            if (block) block.draw(context);
         }
     }
 }

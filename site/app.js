@@ -31,24 +31,30 @@ window.addEventListener('load', function() {
 
     const gm_button = document.getElementById('gm-button');
     gm_button.addEventListener('click', async () => {
-        if (mode === 1) {
-            gm_button.innerHTML = "Change to AI";
+        if (mode === 0) {
             game = new AIGame(canvas.width, canvas.height);
+            startFlaskServer();
+            mode = 1;
+            gm_button.innerHTML = "Change to Player";
+        } else {
+            game = new Game(canvas.width, canvas.height);
             mode = 0;
             stopFlaskServer();
-        } else {
-            gm_button.innerHTML = "Change to Player";
-            game = new Game(canvas.width, canvas.height);
-            mode = 1;
-            startFlaskServer();
-            sendDataToFlask(game.info);
+            gm_button.innerHTML = "Change to AI";
         }
     });
 
     const restart_button = document.getElementById('restart-button');
     restart_button.addEventListener('click', async () => {
-        if (mode === 1) game = new Game(canvas.width, canvas.height);
+        if (mode === 0) game = new Game(canvas.width, canvas.height);
         else game = new AIGame(canvas.width, canvas.height);
+    });
+
+    const test_button = document.getElementById('test-button');
+    test_button.addEventListener('click', async () => {
+        if (mode === 1) {
+            game.placeBlock(0, 12);
+        }
     });
 
     function animate() {
@@ -57,7 +63,11 @@ window.addEventListener('load', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         game.draw(ctx);
         if (mode === 1 && gameInfo !== game.info) {
-            sendDataToFlask(game.info);
+            if (game.info.num_options !== 0) {
+                sendDataToFlask(game.info);
+            } else {
+                game.analyze();
+            }
             gameInfo = game.info;
         }
         requestAnimationFrame(animate);
@@ -78,6 +88,7 @@ window.addEventListener('load', function() {
                 const responseData = await response.json();
                 console.log('Response from Flask:', responseData);
                 // DO SOMETHING WITH DATA
+                game.placeBlock(responseData[0], responseData[1]);
             } else {
                 console.error('Failed to send data to Flask server');
             }

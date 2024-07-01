@@ -8,8 +8,8 @@ export class Game {
         this.width = width;
         this.height = height;
         this.draggingBlock = null;
-        this.bar = new Bar(new Rect(canvas.height, 0, canvas.width - canvas.height, canvas.height));
-        this.grid = new Grid();
+        this.bar = new Bar(new Rect(height, 0, width - height, height));
+        this.grid = new Grid(0, 0, height, height);
         this.points = 0;
         this.info = {}
         this.analyze();
@@ -66,24 +66,19 @@ export class Game {
     unclickBlock() {
         let blockPlaced = false;
         if (this.draggingBlock) {
-            if (this.draggingBlock.selectedTiles) {
+            if (this.grid.selectedTiles) {
                 for (let row of this.grid.tiles) {
                     for (let tile of row)
                     if (tile.rect.selected) tile.occupyTile(this.draggingBlock.color);
-                    for (let i in this.bar.blocks) {
-                        if (this.bar.blocks[i] && this.bar.blocks[i].originY === this.draggingBlock.originY) {
-                            this.bar.blocks.splice(i, 1);
-                            this.points += this.draggingBlock.squares.length;
-                            break;
-                        }
-                    }
                 }
+                this.bar.blocks.splice(this.bar.blocks.indexOf(this.draggingBlock), 1);
+                this.points += this.draggingBlock.squares.length;
                 this.draggingBlock.draggable = false;
                 blockPlaced = true; 
             } else {
                 this.draggingBlock.reset();
             }
-            this.draggingBlock.selectedTiles = null;
+            this.grid.selectedTiles = null;
             this.draggingBlock = null;
             this.grid.unselectGrid();
         }
@@ -96,27 +91,24 @@ export class Game {
             this.draggingBlock.x = x - this.draggingBlock.offsetX;
             this.draggingBlock.y = y - this.draggingBlock.offsetY;
             this.draggingBlock.update();
-            let containsIndexPoint = null;
-            for (let row of this.grid.tiles) {
-                for (let tile of row) {
-                    tile.rect.selected = false;
-                    if (tile.rect.contains(this.draggingBlock.indexPoint.x, this.draggingBlock.indexPoint.y)) {
-                        containsIndexPoint = tile;
+            let selectedTiles = [];
+            for (let point of this.draggingBlock.points) {
+                for (let row of this.grid.tiles) {
+                    for (let tile of row) {
+                        tile.rect.selected = false;
+                        if (tile.rect.contains(point.x, point.y) && !tile.occupied) {
+                            selectedTiles.push(tile);
+                        }
                     }
                 }
             }
-            if (containsIndexPoint) {
-                this.draggingBlock.selectedTiles = this.draggingBlock.select(containsIndexPoint.row, containsIndexPoint.col)
-                if (!this.draggingBlock.selectedTiles) return; 
-                for (let i of this.draggingBlock.selectedTiles) {
-                    if (this.grid.tiles[i[0]][i[1]].occupied) {
-                        this.draggingBlock.selectedTiles = null;
-                        return;
-                    }
+            if (this.draggingBlock.squares.length === selectedTiles.length) {
+                this.grid.selectedTiles = selectedTiles;
+                for (let tile of selectedTiles) {
+                    tile.rect.selected = true;
                 }
-                for (let i of this.draggingBlock.selectedTiles) {
-                    this.grid.tiles[i[0]][i[1]].rect.selected = true;
-                }
+            } else {
+                this.grid.selectedTiles = null;
             }
         }
     }

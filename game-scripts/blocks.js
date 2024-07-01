@@ -17,9 +17,7 @@ export class Block {
         this.offsetY = 0;
         this.squareWidth = 20;
         [this.structure, this.structureX, this.structureY] = this.makeStructure();
-        this.squares = this.updateSquares();
-        this.indexPoint = new Point(this.squares[0].x + this.squares[0].w / 2, this.squares[0].y + this.squares[0].h / 2);
-        this.selectedTiles = null;
+        [this.squares, this.points] = this.updateSquares();
         this.validPlaces = null;
     }
     makeStructure() {
@@ -157,30 +155,13 @@ export class Block {
         this.y -= this.squareWidth * (x + 1) / 2;
         return [structure, x, y];
     }
-    select(row, col) {
-        if (row < 0 || col < 0) {
-            this.selectedTiles = null
-            return;
-        }
-        let selectedTiles = [];
-        for (let i of this.structure) {
-            selectedTiles.push([row + i[1], col + i[0]])
-        }
-        for (let i of selectedTiles) {
-            if (i[0] > 9 || i[0] < 0 || i[1] > 9 || i[1] < 0) {
-                this.selectedTiles = null;
-                return;
-            }
-        }
-        return selectedTiles;
-    }
     reset() {
         this.squareWidth = 20;
         this.x = this.originX - this.squareWidth * (this.structureY + 1) / 2;
         this.y = this.originY - this.squareWidth * (this.structureX + 1) / 2;
         this.offsetX = 0;
         this.offsetY = 0;
-        this.squares = this.updateSquares();
+        [this.squares, this.points] = this.updateSquares();
     }
     findValidPlacement(grid) {
         let validPlacement = [];
@@ -206,18 +187,18 @@ export class Block {
     }
     updateSquares() {
         let squares = [];
+        let points = [];
         for (let s of this.structure) {
-            squares.push(new Rect(this.x + s[0] * this.squareWidth, this.y + s[1] * this.squareWidth, this.squareWidth, this.squareWidth))
+            let r = new Rect(this.x + s[0] * this.squareWidth, this.y + s[1] * this.squareWidth, this.squareWidth, this.squareWidth);
+            squares.push(r);
+            if (this.type !== 5 && this.type !== 18) points.push(new Point(r.x + this.squareWidth / 2, r.y + this.squareWidth / 2));
+            else if (this.type === 5) points.push(new Point(r.x + this.squareWidth / 2, r.y - this.squareWidth / 2));
+            else points.push(new Point(r.x + this.squareWidth / 2, r.y - this.squareWidth * 3 / 2));
         }
-        return squares;
+        return [squares, points];
     }
     update() {
-        this.squares = this.updateSquares();
-        if (this.type === 5) {
-            this.indexPoint = new Point(this.squares[0].x + this.squareWidth / 2, this.squares[0].y - this.squareWidth * 3 / 2);
-        } else if (this.type === 18) {
-            this.indexPoint = new Point(this.squares[0].x + this.squareWidth / 2, this.squares[0].y - this.squareWidth * 7 / 2);
-        } else this.indexPoint = new Point(this.squares[0].x + this.squareWidth / 2, this.squares[0].y + this.squareWidth / 2);
+        [this.squares, this.points] = this.updateSquares();
         const dx = this.x - this.squares[0].x;
         const dy = this.y - this.squares[0].y;
         for (let square of this.squares) {

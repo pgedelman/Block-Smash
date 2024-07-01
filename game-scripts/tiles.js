@@ -31,7 +31,7 @@ export class Tile {
 }
 
 export class Grid {
-    constructor() {
+    constructor(x, y, width, height) {
         this.tiles = [];
         for (let i = 0; i < 10; i++) {
             let place = [];
@@ -40,6 +40,8 @@ export class Grid {
             }
             this.tiles.push(place);
         }
+        this.rect = new Rect(x, y, width, height);
+        this.selectedTiles = null;
     }
     smashTiles() {
         let points = 0;

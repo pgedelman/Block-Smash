@@ -11,9 +11,10 @@ export class Game {
         this.bar = new Bar(new Rect(height, 0, width - height, height));
         this.grid = new Grid(0, 0, height, height);
         this.points = 0;
+        this.lost = false;
+        this.lostScreen = null;
         this.info = {}
         this.analyze();
-        this.lost = null;
     }
     analyze() {
         let num_options = 0;
@@ -34,16 +35,16 @@ export class Game {
                 else grid.push(1);
             }
         }
+        if (this.info.num_options === 0) {
+            this.lost = true;
+            this.lostScreen = new LostScreen(this.points, this.width, this.height);
+        }
         this.info = {
             points: this.points,
             grid: grid,
             num_options: num_options,
             options: options,
         };
-        if (this.info.num_options === 0) {
-            this.lost = new LostScreen(this.points, this.width, this.height);
-        }
-        console.log(this.info);
     }
     clickBlock(x, y) {
         console.log(x, y);
@@ -121,7 +122,7 @@ export class Game {
         this.grid.draw(context);
         this.bar.draw(context);
         if (this.lost) {
-            this.lost.draw(context, this.width / 2, this.height /2);
+            this.lostScreen.draw(context, this.width / 2, this.height /2);
         }
     }
 }

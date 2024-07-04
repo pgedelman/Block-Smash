@@ -1,5 +1,6 @@
 import { Game, AIGame } from '../game-scripts/main.js';
 
+let serverReady = false;
 window.addEventListener('load', function() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -63,37 +64,43 @@ window.addEventListener('load', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         game.draw(ctx);
         if (mode === 1 && gameInfo !== game.info) {
-            if (game.info.num_options !== 0) {
-                sendDataToFlask(game.info);
-            } else {
+            console.log(game.info);
+            sendDataToFlask(game.info);
+            if (game.info.num_options === 0) {
                 game.analyze();
             }
-            gameInfo = game.info;
         }
+        gameInfo = game.info;
         requestAnimationFrame(animate);
     }
     animate();
 
     async function sendDataToFlask(data) {
-        try {
-            const response = await fetch('http://localhost:5000/predict', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-            if (response.ok) {
-                console.log('Data sent to Flask server');
-                const responseData = await response.json();
-                console.log('Response from Flask:', responseData);
-                // DO SOMETHING WITH DATA
-                game.placeBlock(responseData[0], responseData[1]);
-            } else {
-                console.error('Failed to send data to Flask server');
+        while (!serverReady) {await new Promise(resolve => setTimeout(resolve, 1000));}
+        if (serverReady) {
+            try {
+                const response = await fetch('http://localhost:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+                if (response.ok) {
+                    console.log('Data sent to Flask server');
+                    const responseData = await response.json();
+                    console.log('Response from Flask:', responseData);
+                    if (responseData[0] === -1 && responseData[1] === -1) {
+                        game = new AIGame(canvas.width, canvas.height);
+                    } else {
+                        game.placeBlock(responseData[0], responseData[1]);
+                    }
+                } else {
+                    console.error('Failed to send data to Flask server');
+                }
+            } catch (error) {
+                console.error('Error sending data to Flask server:', error);
             }
-        } catch (error) {
-            console.error('Error sending data to Flask server:', error);
         }
     }
 });
@@ -101,7 +108,9 @@ window.addEventListener('load', function() {
 async function startFlaskServer() {
     try {
         await fetch('/start-flask', { method: 'POST' });
+        await new Promise(resolve => setTimeout(resolve, 5000));    
         console.log('Flask server started');
+        serverReady = true;
     } catch (error) {
         console.error('Failed to start Flask server:', error);
     }

@@ -2,7 +2,7 @@ const { spawn } = require('cross-spawn');
 const path = require('path');
 let flaskProcess = null;
 
-const flaskScriptPath = path.join(__dirname, 'main.py');
+const flaskScriptPath = path.join(__dirname, 'flask_manager.py');
 
 function startFlaskServer() {
     if (!flaskProcess) {

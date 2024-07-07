@@ -1,4 +1,4 @@
-import { Game, AIGame } from '../game-scripts/main.js';
+import { PlayerGame, AIGame } from '../game-scripts/main.js';
 
 let serverReady = false;
 window.addEventListener('load', function() {
@@ -8,7 +8,7 @@ window.addEventListener('load', function() {
     canvas.width = 725;
     canvas.height = 600;
 
-    let game = new Game(canvas.width, canvas.height);
+    let game = new PlayerGame(canvas.width, canvas.height);
     let gameInfo = game.info;
     console.log(game);
 
@@ -38,7 +38,7 @@ window.addEventListener('load', function() {
             mode = 1;
             gm_button.innerHTML = "Change to Player";
         } else {
-            game = new Game(canvas.width, canvas.height);
+            game = new PlayerGame(canvas.width, canvas.height);
             mode = 0;
             stopFlaskServer();
             gm_button.innerHTML = "Change to AI";
@@ -47,7 +47,7 @@ window.addEventListener('load', function() {
 
     const restart_button = document.getElementById('restart-button');
     restart_button.addEventListener('click', async () => {
-        if (mode === 0) game = new Game(canvas.width, canvas.height);
+        if (mode === 0) game = new PlayerGame(canvas.width, canvas.height);
         else game = new AIGame(canvas.width, canvas.height);
     });
 
@@ -59,16 +59,13 @@ window.addEventListener('load', function() {
     });
 
     function animate() {
-        let points = document.getElementById("points");
-        points.innerText = Math.floor(game.points).toString();
+        let score = document.getElementById("score");
+        score.innerText = Math.floor(game.score).toString();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         game.draw(ctx);
         if (mode === 1 && gameInfo !== game.info) {
             console.log(game.info);
             sendDataToFlask(game.info);
-            if (game.info.num_options === 0) {
-                game.analyze();
-            }
         }
         gameInfo = game.info;
         requestAnimationFrame(animate);

@@ -1,7 +1,11 @@
 import { Rect, Point } from './rect.js';
 
-const backgroundColor = 'rgb(72, 137, 204)';
-const maxPlacements = {1: 64, 2: 60, 3: 81, 4: 81, 5: 81, 6: 81, 7: 81, 8: 100, 9: 70, 10: 60, 11: 70, 12: 72, 13: 72, 14: 90, 15: 64, 16: 64, 17: 64, 18: 64, 19: 80, 20: 80, 21: 90};
+const backgroundColor = 'rgb(106, 131, 175)';
+const yellowColor = 'rgb(241, 212, 98)';
+const redColor = 'rgb(236, 112, 99)';
+const blueColor = 'rgb(103, 165, 206)';
+const purpleColor = 'rgb(165, 105, 189)';
+const greenColor = 'rgb(82, 190, 128)';
 
 export class Block {
     constructor(y, type) {
@@ -11,8 +15,7 @@ export class Block {
         this.y = y;
         this.originX = 662;
         this.originY = y;
-        this.draggable = true;
-        this.dragging = false;
+        this.isDraggable = true;
         this.offsetX = 0;
         this.offsetY = 0;
         this.squareWidth = 20;
@@ -29,29 +32,29 @@ export class Block {
                         structure.push([i, j]);
                     }
                 }
-                this.color = 'rgb(247, 220, 111)';
+                this.color = yellowColor;
                 break;
             case 2: // 5 Line Up
                 for (let i = 0; i < 5; i++) {
                     structure.push([0, i]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
             case 3: // First Small Step
                 structure.push([0, 0], [0, 1], [1, 1]);
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;  
             case 4: // Second Small Step
                 structure.push([0, 0], [1, 0], [1, 1]);
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;  
             case 5: // Third Small Step
                 structure.push([0, 1], [1, 1], [1, 0]);
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;  
             case 6: // Fourth Small Step
                 structure.push([0, 0], [0, 1], [1, 0]);
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;  
             case 7: // Small Square
                 for (let i = 0; i < 2; i++) {
@@ -59,29 +62,29 @@ export class Block {
                         structure.push([i, j]);
                     }
                 }
-                this.color = 'rgb(247, 220, 111)';
+                this.color = yellowColor;
                 break;
             case 8: // Mini Block
                 structure.push([0, 0]);
-                this.color = 'rgb(247, 220, 111)';
+                this.color = yellowColor;
                 break;
             case 9: // 4 Line Up
                 for (let i = 0; i < 4; i++) {
                     structure.push([0, i]);
                 }
-                this.color = 'rgb(165, 105, 189)';
+                this.color = purpleColor;
                 break;
             case 10: // 5 Line Left
                 for (let i = 0; i < 5; i++) {
                     structure.push([i, 0]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
             case 11: // 4 Line Left
                 for (let i = 0; i < 4; i++) {
                     structure.push([i, 0]);
                 }
-                this.color = 'rgb(165, 105, 189)';
+                this.color = purpleColor;
                 break;
             case 12: // Part Square Up
                 for (let i = 0; i < 2; i++) {
@@ -89,7 +92,7 @@ export class Block {
                         structure.push([i, j]);
                     }
                 }
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;
             case 13: // Part Square Left
                 for (let i = 0; i < 3; i++) {
@@ -97,53 +100,53 @@ export class Block {
                         structure.push([i, j]);
                     }
                 }
-                this.color = 'rgb(236, 112, 99)';
+                this.color = redColor;
                 break;
             case 14: // 2 Line Up
                 for (let i = 0; i < 2; i++) {
                     structure.push([0, i]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
             case 15: // First Big Step
                 structure.push([0, 0]);
                 for (let i = 1; i < 3; i++) {
                     structure.push([i, 0], [0, i]);
                 }
-                this.color = 'rgb(82, 190, 128)';
+                this.color = greenColor;
                 break;
             case 16: // Second Big Step
                 structure.push([0, 0], [0, 1], [1, 2], [2, 2], [0, 2]);
-                this.color = 'rgb(82, 190, 128)';
+                this.color = greenColor;
                 break;
             case 17: // Third Big Step
                 for (let i = 0; i < 2; i++) {
                     structure.push([i, 0], [2, i]);
                 }
                 structure.push([2, 2]);
-                this.color = 'rgb(82, 190, 128)';
+                this.color = greenColor;
                 break;
             case 18: // Fourth Big Step
                 structure.push([0, 2], [1, 2], [2, 0], [2, 1], [2, 2]);
-                this.color = 'rgb(82, 190, 128)';
+                this.color = greenColor;
                 break;
             case 19: // 3 Line Up
                 for (let i = 0; i < 3; i++) {
                     structure.push([0, i]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
             case 20: // 3 Line Left
                 for (let i = 0; i < 3; i++) {
                     structure.push([i, 0]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
             case 21: // 2 Line Left
                 for (let i = 0; i < 2; i++) {
                     structure.push([i, 0]);
                 }
-                this.color = 'rgb(103, 165, 206)';
+                this.color = blueColor;
                 break;
         }
         let x = 0, y = 0;
@@ -188,12 +191,12 @@ export class Block {
     updateSquares() {
         let squares = [];
         let points = [];
-        for (let s of this.structure) {
-            let r = new Rect(this.x + s[0] * this.squareWidth, this.y + s[1] * this.squareWidth, this.squareWidth, this.squareWidth);
-            squares.push(r);
-            if (this.type !== 5 && this.type !== 18) points.push(new Point(r.x + this.squareWidth / 2, r.y + this.squareWidth / 2));
-            else if (this.type === 5) points.push(new Point(r.x + this.squareWidth / 2, r.y - this.squareWidth / 2));
-            else points.push(new Point(r.x + this.squareWidth / 2, r.y - this.squareWidth * 3 / 2));
+        for (let segment of this.structure) {
+            let square = new Rect(this.x + segment[0] * this.squareWidth, this.y + segment[1] * this.squareWidth, this.squareWidth, this.squareWidth);
+            squares.push(square);
+            if (this.type !== 5 && this.type !== 18) points.push(new Point(square.x + this.squareWidth / 2, square.y + this.squareWidth / 2));
+            else if (this.type === 5) points.push(new Point(square.x + this.squareWidth / 2, square.y - this.squareWidth / 2));
+            else points.push(new Point(square.x + this.squareWidth / 2, square.y - this.squareWidth * 3 / 2));
         }
         return [squares, points];
     }

@@ -1,7 +1,7 @@
 export class LostScreen {
-    constructor(points){
+    constructor(score){
         this.message = 'You Lost';
-        this.score = 'Score: ' + points.toString();
+        this.score = 'Score: ' + score.toString();
     }
     update() {
         if (this.blocks.length === 0) {

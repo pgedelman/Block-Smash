@@ -4,7 +4,6 @@ export class Rect {
         this.y = y;
         this.w = w;
         this.h = h;
-        this.selected = false;
     }
     contains(x, y) {
         return x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h;

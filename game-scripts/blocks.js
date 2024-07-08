@@ -166,28 +166,6 @@ export class Block {
         this.offsetY = 0;
         [this.squares, this.points] = this.updateSquares();
     }
-    findValidPlacement(grid) {
-        let validPlacement = [];
-        let n = grid.length;
-        let m = grid[0].length;
-        let i = 0;
-        for (let row = 0; row + this.structureX < n; row++) {
-            for (let col = 0; col + this.structureY < m; col++) {
-                if (!grid[row][col].occupied) {
-                    let validOption = [row, col];
-                    for (let s of this.structure) {
-                        if (grid[row + s[1]][col + s[0]].occupied) {
-                            validOption = [-1, -1];
-                            break;
-                        }
-                    }
-                    validPlacement[i] = validOption;
-                } else validPlacement[i] = [-1, -1];
-                i++;
-            }
-        }
-        return validPlacement;
-    }
     updateSquares() {
         let squares = [];
         let points = [];

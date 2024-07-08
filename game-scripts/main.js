@@ -2,6 +2,7 @@ import { Rect } from './rect.js';
 import { Bar } from './bar.js';
 import { Grid } from './tiles.js';
 import { LostScreen } from './lost.js';
+import { findMoves, findMoveset } from './move.js';
 
 const backgroundColor = 'rgb(106, 131, 175)';
 
@@ -19,17 +20,6 @@ class Game {
         this.analyzeGameInfo(); 
     }
     analyzeGameInfo() {
-        let num_moves = 0;
-        let moves = {};
-        for (let block of this.blockBar.blocks) {
-            if (block) {
-                block.validPlaces = block.findValidPlacement(this.tileGrid.tiles);
-                moves[block.type] = block.validPlaces;
-                for (let i of block.validPlaces) {
-                    num_moves += i[0] !== -1;
-                }
-            }
-        }
         let grid = [];
         for (let row of this.tileGrid.tiles) {
             for (let tile of row) {
@@ -37,17 +27,23 @@ class Game {
                 else grid.push(1);
             }
         }
+        const moves = findMoves(this.tileGrid.tiles, this.blockBar.blocks);
+        let numberOfMoves = 0;
+        for (let type of Object.values(moves)) {
+            numberOfMoves += type.length;
+        }
         this.info = {
             score: this.score,
             tileGrid: grid,
-            num_moves: num_moves,
             moves: moves,
+            numberOfMoves: numberOfMoves,
         };
     }
     update() {
         this.blockBar.update();
         this.score += this.tileGrid.smashTiles();
-        if (this.info.num_moves === 0) {
+        this.analyzeGameInfo();
+        if (this.info.numberOfMoves === 0) {
             this.isOver = true;
             this.lostScreen = new LostScreen(this.score, this.width, this.height);
         }
@@ -134,6 +130,10 @@ export class PlayerGame extends Game {
             }
         }
     }
+    analyzeGameInfo() {
+        super.analyzeGameInfo();
+        console.log(this.info);
+    }
 }
 
 export class AIGame extends Game {
@@ -155,5 +155,11 @@ export class AIGame extends Game {
         }
         this.blockBar.blocks.splice(blockIndex, 1);
         this.update();
+    }
+    analyzeGameInfo() {
+        super.analyzeGameInfo();
+        const moveset = findMoveset(this.tileGrid.tiles, this.blockBar.blocks);
+        this.info.moveset = moveset;
+        console.log(this.info);
     }
 }

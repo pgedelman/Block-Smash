@@ -23,7 +23,8 @@ export function findMoveset(grid, blocks) {
     const m = exampleGrid[0].length;
     function findMovesetHelper(exampleGrid, blocks, index, movePath) {
         if (index === blocks.length && movePath.length === blocks.length) {
-            moveset.push([...movePath])
+            let [surfaceArea, smallHoles, bigHoles] = findSAandHoles(exampleGrid);
+            moveset.push([...movePath, [exampleGrid, surfaceArea, smallHoles, bigHoles]]);
             return;
         }
         for (let i = index; i < blocks.length; i++) {
@@ -31,7 +32,7 @@ export function findMoveset(grid, blocks) {
                 for (let col = 0; col + blocks[i].structureY < m; col++) {
                     if (exampleGrid[row][col] === 0 && blocks[i].structure.every((s) => exampleGrid[row + s[1]][col + s[0]] === 0)) {
                         let [smashedGrid, score] = smashExampleGrid(exampleGrid, blocks[i].structure, row, col);
-                        movePath.push([blocks[i].type, score, row, col]);
+                        movePath.push([blocks[i].type, score + blocks[i].squares.length, row, col]);
                         findMovesetHelper(smashedGrid, blocks, i + 1, movePath);
                         movePath.pop();
                     }
@@ -45,6 +46,7 @@ export function findMoveset(grid, blocks) {
 
 function smashExampleGrid(grid, structure, row, col) {
     let exampleGrid = [];
+    let groupsSmashed = 0;
     for (let row in grid) {
         exampleGrid[row] = grid[row].slice();
     }
@@ -61,6 +63,7 @@ function smashExampleGrid(grid, structure, row, col) {
             }
         }
         if (fullRowSmashed) {
+            groupsSmashed++;
             for (let j in exampleGrid[i]) {
                 gettingSmashed.push([i, j]);
             }
@@ -74,6 +77,7 @@ function smashExampleGrid(grid, structure, row, col) {
             }
         }
         if (fullColSmashed) {
+            groupsSmashed++;
             for (let j in exampleGrid[i]) {
                 gettingSmashed.push([j, i]);
             }       
@@ -83,7 +87,33 @@ function smashExampleGrid(grid, structure, row, col) {
         exampleGrid[row][col] = 0;
     }
     if (gettingSmashed.length > 0) {
-        score += 10 * Math.pow(gettingSmashed.length, 2) - 10 * gettingSmashed.length + 15;
+        score += 10 * Math.pow(groupsSmashed, 2) - 10 * groupsSmashed + 15;
     }
     return [exampleGrid, score];
+}
+
+function findSAandHoles(grid) {
+    const n = grid.length;
+    const m = grid[0].length;
+    let surfaceArea = 0;
+    let smallHoles = 0;
+    let bigHoles = 0;
+    const bigHoleIndexes = [[0, 0], [0, 1], [0, 2],
+                            [1, 0], [1, 1], [1, 2],
+                            [2, 0], [2, 1], [2, 2]];
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            if (grid[i][j] === 1) {
+                if (i - 1 > 0 && grid[i-1][j] === 0) surfaceArea++;
+                if (i + 1 < n && grid[i+1][j] === 0) surfaceArea++;
+                if (j - 1 > 0 && grid[i][j-1] === 0) surfaceArea++;
+                if (j + 1 < m && grid[i][j+1] === 0) surfaceArea++;
+            } else {
+                if ((i - 1 < 0 || grid[i-1][j] === 1) && (i + 1 > n || grid[i+1][j] === 1)
+                 && (j - 1 < 0 || grid[i][j-1] === 1) && (j + 1 > m || grid[i][j+1] === 1)) smallHoles++;
+                if (i + 2 < n && j + 2 < m) bigHoles += bigHoleIndexes.every((index) => grid[i+index[0]][j+index[1]] === 0);
+            }
+        }
+    }
+    return [surfaceArea, smallHoles, bigHoles];
 }

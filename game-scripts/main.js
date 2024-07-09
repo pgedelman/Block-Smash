@@ -12,48 +12,27 @@ class Game {
         this.height = height;
         this.rect = new Rect(0, 0, width, height);
         this.blockBar = new Bar();
-        this.tileGrid = new Grid(0, 0, height, height);
+        this.grid = new Grid(0, 0, height, height);
         this.score = 0;
-        this.isOver = false;
+        this.numberOfMoves = 100;
         this.lostScreen = null;
-        this.info = {}
-        this.analyzeGameInfo(); 
     }
-    analyzeGameInfo() {
-        let grid = [];
-        for (let row of this.tileGrid.tiles) {
-            for (let tile of row) {
-                if (tile.occupied) grid.push(0);
-                else grid.push(1);
-            }
-        }
-        const moves = findMoves(this.tileGrid.tiles, this.blockBar.blocks);
-        let numberOfMoves = 0;
-        for (let type of Object.values(moves)) {
-            numberOfMoves += type.length;
-        }
-        this.info = {
-            score: this.score,
-            tileGrid: grid,
-            moves: moves,
-            numberOfMoves: numberOfMoves,
-        };
+    blockPlaced() {
+        this.score += this.grid.smashTiles();
     }
     update() {
         this.blockBar.update();
-        this.score += this.tileGrid.smashTiles();
-        this.analyzeGameInfo();
-        if (this.info.numberOfMoves === 0) {
-            this.isOver = true;
+        this.blockPlaced();
+        if (this.numberOfMoves === 0) {
             this.lostScreen = new LostScreen(this.score, this.width, this.height);
         }
     }
     draw(context) {
         context.fillStyle = backgroundColor;
         context.fillRect(this.rect.x, this.rect.y, this.rect.w, this.rect.h);
-        this.tileGrid.draw(context);
+        this.grid.draw(context);
         this.blockBar.draw(context);
-        if (this.isOver) {
+        if (this.lostScreen) {
             this.lostScreen.draw(context, this.width / 2, this.height /2);
         }
     }
@@ -84,8 +63,8 @@ export class PlayerGame extends Game {
     unclickBlock() {
         let blockPlaced = false;
         if (this.blockBeingDragged) {
-            if (this.tileGrid.selectedTiles) {
-                for (let row of this.tileGrid.tiles) {
+            if (this.grid.selectedTiles) {
+                for (let row of this.grid.tiles) {
                     for (let tile of row)
                     if (tile.selected) tile.occupyTile(this.blockBeingDragged.color);
                 }
@@ -96,9 +75,9 @@ export class PlayerGame extends Game {
             } else {
                 this.blockBeingDragged.reset();
             }
-            this.tileGrid.selectedTiles = null;
+            this.grid.selectedTiles = null;
             this.blockBeingDragged = null;
-            this.tileGrid.unselectGrid();
+            this.grid.unselectGrid();
         }
         if (blockPlaced) {
             this.update();
@@ -111,7 +90,7 @@ export class PlayerGame extends Game {
             this.blockBeingDragged.update();
             let selectedTiles = [];
             for (let point of this.blockBeingDragged.points) {
-                for (let row of this.tileGrid.tiles) {
+                for (let row of this.grid.tiles) {
                     for (let tile of row) {
                         tile.selected = false;
                         if (tile.rect.contains(point.x, point.y) && !tile.occupied) {
@@ -121,24 +100,25 @@ export class PlayerGame extends Game {
                 }
             }
             if (this.blockBeingDragged.squares.length === selectedTiles.length) {
-                this.tileGrid.selectedTiles = selectedTiles;
+                this.grid.selectedTiles = selectedTiles;
                 for (let tile of selectedTiles) {
                     tile.selected = true;
                 }
             } else {
-                this.tileGrid.selectedTiles = null;
+                this.grid.selectedTiles = null;
             }
         }
     }
-    analyzeGameInfo() {
-        super.analyzeGameInfo();
-        console.log(this.info);
+    blockPlaced() {
+        super.blockPlaced();
+        this.numberOfMoves = Object.values(findMoves(this.grid.tiles, this.blockBar.blocks)).flat().length;
     }
 }
 
 export class AIGame extends Game {
     constructor(width, height) {
         super(width, height);
+        this.info = {};
     }
     placeBlock(blockType, placement) {
         let stagedBlock = null;
@@ -151,15 +131,20 @@ export class AIGame extends Game {
             blockIndex++;
         }
         for (let s of stagedBlock.structure) {
-            this.tileGrid.tiles[stagedBlock.validPlaces[placement][0] + s[1]][stagedBlock.validPlaces[placement][1] + s[0]].occupyTile(stagedBlock.color);
+            this.grid.tiles[stagedBlock.validPlaces[placement][0] + s[1]][stagedBlock.validPlaces[placement][1] + s[0]].occupyTile(stagedBlock.color);
         }
         this.blockBar.blocks.splice(blockIndex, 1);
         this.update();
     }
-    analyzeGameInfo() {
-        super.analyzeGameInfo();
-        const moveset = findMoveset(this.tileGrid.tiles, this.blockBar.blocks);
+    blockPlaced() {
+        super.blockPlaced();
+        this.organizeGameInfo();
+        this.numberOfMoves = this.info.moveset.length;
+    }
+    organizeGameInfo() {
+        const moveset = findMoveset(this.grid.tiles, this.blockBar.blocks);
         this.info.moveset = moveset;
+        this.info.numberOfMoves = moveset.length;
         console.log(this.info);
     }
 }

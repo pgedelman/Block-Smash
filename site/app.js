@@ -4,79 +4,91 @@ let serverReady = false;
 window.addEventListener('load', function() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let mode = 0;
+    let player = true;
+    let train = false;
     canvas.width = 725;
     canvas.height = 600;
 
     let game = new PlayerGame(canvas.width, canvas.height);
-    let gameInfo = game.info;
     console.log(game);
 
     canvas.addEventListener('mousedown', (event) => {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        game.clickBlock(x, y);
+        if (player === true) game.clickBlock(x, y);
     });
 
     canvas.addEventListener('mouseup', () => {
-        game.unclickBlock();
+        if (player === true) game.unclickBlock();
     });
 
     canvas.addEventListener('mousemove', (event) => {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        game.dragBlock(x, y);
+        if (player === true) game.dragBlock(x, y);
     });
 
     const gm_button = document.getElementById('gm-button');
     gm_button.addEventListener('click', async () => {
-        if (mode === 0) {
+        if (player === true) {
             game = new AIGame(canvas.width, canvas.height);
             startFlaskServer();
-            mode = 1;
+            player = false;
             gm_button.innerHTML = "Change to Player";
         } else {
             game = new PlayerGame(canvas.width, canvas.height);
-            mode = 0;
+            player = true;
             stopFlaskServer();
             gm_button.innerHTML = "Change to AI";
         }
     });
 
-    const restart_button = document.getElementById('restart-button');
-    restart_button.addEventListener('click', async () => {
-        if (mode === 0) game = new PlayerGame(canvas.width, canvas.height);
+    const reset_button = document.getElementById('reset-button');
+    reset_button.addEventListener('click', async () => {
+        if (player === true) game = new PlayerGame(canvas.width, canvas.height);
         else game = new AIGame(canvas.width, canvas.height);
     });
 
-    const test_button = document.getElementById('test-button');
-    test_button.addEventListener('click', async () => {
-        if (mode === 1) {
-            game.placeBlock(0, 12);
+    const train_button = document.getElementById('train-button');
+    train_button.addEventListener('click', async () => {
+        if (player === false) {
+            train = true;
+            game.organizeGameInfo();
         }
     });
+
+    const use_button = document.getElementById('use-ai');
+    use_button.addEventListener('click', async () => {
+        if (player === false) {
+            train = false;
+            game.organizeGameInfo();
+        }
+    });
+
 
     function animate() {
         let score = document.getElementById("score");
         score.innerText = Math.floor(game.score).toString();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         game.draw(ctx);
-        if (mode === 1 && gameInfo !== game.info) {
+        if (player === false && game.infoReady) {
             console.log(game.info);
             sendDataToFlask(game.info);
+            game.infoReady = false;
         }
-        gameInfo = game.info;
         requestAnimationFrame(animate);
     }
     animate();
 
     async function sendDataToFlask(data) {
         while (!serverReady) {await new Promise(resolve => setTimeout(resolve, 1000));}
+        let url = 'http://localhost:5000/use';
+        if (train) url = 'http://localhost:5000/train';
         if (serverReady) {
             try {
-                const response = await fetch('http://localhost:5000/predict', {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -89,8 +101,9 @@ window.addEventListener('load', function() {
                     console.log('Response from Flask:', responseData);
                     if (responseData[0] === -1 && responseData[1] === -1) {
                         game = new AIGame(canvas.width, canvas.height);
+                        game.organizeGameInfo();
                     } else {
-                        game.placeBlock(responseData[0], responseData[1]);
+                        game.placeBlock(responseData);
                     }
                 } else {
                     console.error('Failed to send data to Flask server');
@@ -102,10 +115,10 @@ window.addEventListener('load', function() {
     }
 });
 
-async function startFlaskServer() {
+function startFlaskServer() {
     try {
-        await fetch('/start-flask', { method: 'POST' });
-        await new Promise(resolve => setTimeout(resolve, 5000));    
+        fetch('/start-flask', { method: 'POST' });
+        new Promise(resolve => setTimeout(resolve, 5000));    
         console.log('Flask server started');
         serverReady = true;
     } catch (error) {

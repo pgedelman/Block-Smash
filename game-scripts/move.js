@@ -17,30 +17,64 @@ export function findMoves(grid, blocks) {
 }
 
 export function findMoveset(grid, blocks) {
-    const moveset = [];
+    let moveset = [];
     let exampleGrid = grid.map(row => row.map(tile => tile.occupied ? 1 : 0));
     const n = exampleGrid.length;
     const m = exampleGrid[0].length;
+    const memoization = new Map();
+
+    function gridToString(grid) {
+        return grid.map(row => row.join('')).join(';');
+    }
+
     function findMovesetHelper(exampleGrid, blocks, index, movePath) {
-        if (index === blocks.length && movePath.length === blocks.length) {
-            let [surfaceArea, smallHoles, bigHoles] = findSAandHoles(exampleGrid);
-            moveset.push([...movePath, [exampleGrid, surfaceArea, smallHoles, bigHoles]]);
+        const gridString = gridToString(exampleGrid);
+        const key = `${gridString}-${index}`;
+
+        if (memoization.has(key)) {
+            const alreadyDone = memoization.get(key);
+            alreadyDone.forEach(result => moveset.push([...movePath, ...result]));
             return;
         }
+
+        if (index === blocks.length && movePath.length === blocks.length) {
+            const [surfaceArea, smallHoles, bigHoles] = findSAandHoles(exampleGrid);
+            let score = 0;
+            movePath = movePath.flat().filter((move) => {
+                if (Array.isArray(move)) {
+                    return true;
+                } else {
+                    score += move;
+                    return false;
+                }
+            });
+            const result = [[[...movePath], [surfaceArea, smallHoles, bigHoles, score]]];
+            moveset.push(...result);
+            memoization.set(key, result);
+            return;
+        }
+
+        const currentResults = [];
+
         for (let i = index; i < blocks.length; i++) {
             for (let row = 0; row + blocks[i].structureX < n; row++) {
                 for (let col = 0; col + blocks[i].structureY < m; col++) {
                     if (exampleGrid[row][col] === 0 && blocks[i].structure.every((s) => exampleGrid[row + s[1]][col + s[0]] === 0)) {
                         let [smashedGrid, score] = smashExampleGrid(exampleGrid, blocks[i].structure, row, col);
-                        movePath.push([blocks[i].type, score + blocks[i].squares.length, row, col]);
+                        movePath.push([[blocks[i].type, row, col], score + blocks[i].squares.length]);
                         findMovesetHelper(smashedGrid, blocks, i + 1, movePath);
                         movePath.pop();
                     }
                 }
             }
         }
+        currentResults.push([...movePath]);
+        memoization.set(key, currentResults);
     }
     findMovesetHelper(exampleGrid, blocks, 0, []);
+    if (moveset.length > 150000) {
+        moveset = moveset.filter((_, index) => index % 5 === 0);
+    }
     return moveset;
 }
 
@@ -109,8 +143,8 @@ function findSAandHoles(grid) {
                 if (j - 1 > 0 && grid[i][j-1] === 0) surfaceArea++;
                 if (j + 1 < m && grid[i][j+1] === 0) surfaceArea++;
             } else {
-                if ((i - 1 < 0 || grid[i-1][j] === 1) && (i + 1 > n || grid[i+1][j] === 1)
-                 && (j - 1 < 0 || grid[i][j-1] === 1) && (j + 1 > m || grid[i][j+1] === 1)) smallHoles++;
+                if ((i - 1 < 0 || grid[i-1][j] === 1) && (i + 1 >= n || grid[i+1][j] === 1)
+                 && (j - 1 < 0 || grid[i][j-1] === 1) && (j + 1 >= m || grid[i][j+1] === 1)) smallHoles++;
                 if (i + 2 < n && j + 2 < m) bigHoles += bigHoleIndexes.every((index) => grid[i+index[0]][j+index[1]] === 0);
             }
         }

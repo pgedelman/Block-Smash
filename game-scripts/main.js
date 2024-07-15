@@ -118,33 +118,47 @@ export class PlayerGame extends Game {
 export class AIGame extends Game {
     constructor(width, height) {
         super(width, height);
+        this.moveset = null;
         this.info = {};
+        this.infoReady = false;
     }
-    placeBlock(blockType, placement) {
-        let stagedBlock = null;
-        let blockIndex = 0;
-        for (let block of this.blockBar.blocks) {
-            if (block.type === blockType) {
-                block = block;
-                break;
+    placeBlock(moveMetrics) {
+        const metrics = moveMetrics.join(',');
+        const movesetObject = this.moveset.reduce((obj, [value, key]) => {
+            obj[key] = value;
+            return obj;
+        }, {});
+        const move = movesetObject[metrics];
+        console.log(move);
+        if (!Array.isArray(move) || move.length !== 3) {
+            console.log(this.moveset, metrics, movesetObject);
+        }
+        for (const intermediateMove of move) {
+            for (const block of this.blockBar.blocks) {
+                if (intermediateMove[0] === block.type) {
+                    for (let s of block.structure) {
+                        const tile = this.grid.tiles[intermediateMove[1] + s[1]][intermediateMove[2] + s[0]];
+                        if (tile.occupied) throw `Tile at [${intermediateMove[1] + s[1]}][${intermediateMove[2] + s[0]}] occupied, blockType: ${block.type}, Move: ${move}`;
+                        else tile.occupyTile(block.color);
+                    }
+                    super.blockPlaced();
+                    break;
+                }
             }
-            blockIndex++;
         }
-        for (let s of stagedBlock.structure) {
-            this.grid.tiles[stagedBlock.validPlaces[placement][0] + s[1]][stagedBlock.validPlaces[placement][1] + s[0]].occupyTile(stagedBlock.color);
-        }
-        this.blockBar.blocks.splice(blockIndex, 1);
+        this.blockBar.blocks = [];
         this.update();
     }
     blockPlaced() {
         super.blockPlaced();
         this.organizeGameInfo();
-        this.numberOfMoves = this.info.moveset.length;
+        this.numberOfMoves = this.moveset.length;
     }
     organizeGameInfo() {
-        const moveset = findMoveset(this.grid.tiles, this.blockBar.blocks);
-        this.info.moveset = moveset;
-        this.info.numberOfMoves = moveset.length;
-        console.log(this.info);
+        this.moveset = findMoveset(this.grid.tiles, this.blockBar.blocks).filter((move) => move.length === 2);
+        this.info.metrics = this.moveset.flat().filter((arr) => arr.length === 4);
+        this.info.numberOfMoves = this.moveset.length;
+        this.info.score = this.score;
+        this.infoReady = true;
     }
 }

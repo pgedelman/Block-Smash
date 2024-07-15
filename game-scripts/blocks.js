@@ -21,7 +21,6 @@ export class Block {
         this.squareWidth = 20;
         [this.structure, this.structureX, this.structureY] = this.makeStructure();
         [this.squares, this.points] = this.updateSquares();
-        this.validPlaces = null;
     }
     makeStructure() {
         let structure = [];

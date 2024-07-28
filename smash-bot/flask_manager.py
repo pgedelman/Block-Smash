@@ -3,6 +3,8 @@ from flask_cors import CORS
 import logging
 import torch
 import numpy as np
+from datetime import datetime
+import os
 from smash_bot_model import SmashBotModel, initialize_population, select_top_performers, reproduce, mutate, save_model
 
 app = Flask(__name__)
@@ -15,7 +17,7 @@ with open("train-loop-log.txt", "at") as tlinfo:
 
 input_dim = 4
 output_dim = 1
-pop_size = 100
+pop_size = 50
 generations = 50
 evaluations_per_generation = pop_size
 best_score = 0
@@ -25,15 +27,21 @@ fitness_scores = [0] * pop_size
 current_model_index = 0
 current_generation = 0
 current_evaluations = 0
+model_iteration = 0
 
 use_model = SmashBotModel(input_dim, output_dim)
-use_model.load_state_dict(torch.load("saved-models/best-smash-bot.pth"))
+use_model.load_state_dict(torch.load("./saved-models/best-smash-bot.pth"))
 use_model.eval()
+
+start_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 @app.route('/train', methods=['POST'])
 def train():
-    global current_model_index, current_generation, current_evaluations
+    global current_model_index, current_generation, current_evaluations, model_iteration, start_time
     global population, fitness_scores, best_score
+
+    if not os.path.exists(f'./saved-models/{start_time}'):
+        os.makedirs(f'./saved-models/{start_time}')
 
     data = request.json
     app.logger.info(f'Received Data')
@@ -41,11 +49,15 @@ def train():
     numberOfMoves = data['numberOfMoves']
     score = data['score']
     fitness_scores[current_model_index] = score
+
     if current_generation >= generations:
         return jsonify([-3, -6, -6, -3])
     if numberOfMoves == 0 or not len(metrics):
+        model_iteration += 1
+        with open("train-loop-log.txt", "at") as tlinfo:
+            tlinfo.write(f'Iteration: {model_iteration}.\n')
         if score >= best_score:
-            torch.save(population[current_model_index].state_dict(), 'saved-models/smash-bot.pth')
+            torch.save(population[current_model_index].state_dict(), f'./saved-models/{start_time}/{model_iteration}.pth')
             with open("train-loop-log.txt", "at") as tlinfo:
                 tlinfo.write(f'Saved model, score: {score}.\n')
             app.logger.info('Saved model')

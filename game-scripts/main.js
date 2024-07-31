@@ -130,7 +130,7 @@ export class AIGame extends Game {
         }, {});
         const move = movesetObject[metrics];
         console.log(move);
-        if (!Array.isArray(move) || move.length !== 3) {
+        if (!Array.isArray(move) || move.length !== 2) {
             console.log(this.moveset, metrics, movesetObject);
         }
         for (const intermediateMove of move) {
@@ -155,8 +155,9 @@ export class AIGame extends Game {
         this.numberOfMoves = this.moveset.length;
     }
     organizeGameInfo() {
-        this.moveset = findMoveset(this.grid.tiles, this.blockBar.blocks).filter((move) => move.length === 2);
-        this.info.metrics = this.moveset.flat().filter((arr) => arr.length === 4);
+        this.moveset = findMoveset(this.grid.tiles, this.blockBar.blocks);
+        console.log(this.moveset);
+        this.info.metrics = this.moveset;
         this.info.numberOfMoves = this.moveset.length;
         this.info.score = this.score;
         this.infoReady = true;

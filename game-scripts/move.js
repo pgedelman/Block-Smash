@@ -27,9 +27,9 @@ export function findMoveset(grid, blocks) {
         return grid.map(row => row.join('')).join(';');
     }
 
-    function findMovesetHelper(exampleGrid, blocks, index, movePath) {
+    function findMovesetHelper(exampleGrid, blocks, usedBlocks, movePath) {
         const gridString = gridToString(exampleGrid);
-        const key = `${gridString}-${index}`;
+        const key = `${gridString}-${usedBlocks.join(',')}`;
 
         if (memoization.has(key)) {
             const alreadyDone = memoization.get(key);
@@ -37,7 +37,7 @@ export function findMoveset(grid, blocks) {
             return;
         }
 
-        if (index === blocks.length && movePath.length === blocks.length) {
+        if (usedBlocks.every(used => used) && movePath.length === blocks.length) {
             const [surfaceArea, smallHoles, bigHoles] = findSAandHoles(exampleGrid);
             let score = 0;
             movePath = movePath.flat().filter((move) => {
@@ -56,14 +56,17 @@ export function findMoveset(grid, blocks) {
 
         const currentResults = [];
 
-        for (let i = index; i < blocks.length; i++) {
+        for (let i = 0; i < blocks.length; i++) {
+            if (usedBlocks[i]) continue;
+
             for (let row = 0; row + blocks[i].structureX < n; row++) {
                 for (let col = 0; col + blocks[i].structureY < m; col++) {
                     if (exampleGrid[row][col] === 0 && blocks[i].structure.every((s) => exampleGrid[row + s[1]][col + s[0]] === 0)) {
                         let [smashedGrid, score] = smashExampleGrid(exampleGrid, blocks[i].structure, row, col);
-                        movePath.push([[blocks[i].type, row, col], score + blocks[i].squares.length]);
-                        findMovesetHelper(smashedGrid, blocks, i + 1, movePath);
-                        movePath.pop();
+                        let newMovePath = [...movePath, [[blocks[i].type, row, col], score + blocks[i].squares.length]];
+                        let newUsedBlocks = [...usedBlocks];
+                        newUsedBlocks[i] = true;
+                        findMovesetHelper(smashedGrid, blocks, newUsedBlocks, newMovePath);
                     }
                 }
             }
@@ -71,7 +74,9 @@ export function findMoveset(grid, blocks) {
         currentResults.push([...movePath]);
         memoization.set(key, currentResults);
     }
-    findMovesetHelper(exampleGrid, blocks, 0, []);
+    let usedBlocks = new Array(blocks.length).fill(false);
+    findMovesetHelper(exampleGrid, blocks, usedBlocks, []);
+    moveset = moveset.filter(move => move.length === 5);
     if (moveset.length > 150000) {
         moveset = moveset.filter((_, index) => index % 5 === 0);
     }

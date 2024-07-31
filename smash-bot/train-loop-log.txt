@@ -1591,3 +1591,48 @@ Start of training loop
 Start of training loop
 Iteration: 1.
 Saved model, score: 15.
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+Iteration: 1. Score: 2015
+Saved model, score: 2015.
+Iteration: 2. Score: 6630
+Saved model, score: 6630.
+Iteration: 3. Score: 17865
+Saved model, score: 17865.
+Iteration: 4. Score: 13420
+Iteration: 5. Score: 11010
+Iteration: 6. Score: 14105
+Iteration: 7. Score: 2185
+Iteration: 8. Score: 6770
+Iteration: 9. Score: 3080
+Iteration: 10. Score: 7965
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+Iteration: 1. Score: 0
+Saved model, score: 0.
+Iteration: 2. Score: 0
+Saved model, score: 0.
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop
+
+Start of training loop

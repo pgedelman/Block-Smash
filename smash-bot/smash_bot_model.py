@@ -45,3 +45,12 @@ def reproduce(top_models, pop_size):
 def save_model(model_path, population):
     torch.save(population[0].state_dict(), model_path)
     print(f'Trained model saved to {model_path}')
+
+def manual_population(input_dim, output_dim):
+    population = []
+    files = ['1090.pth', '1075.pth', '814.pth', '736.pth', '342.pth'] * 2
+    for file in files:
+        model = SmashBotModel(input_dim, output_dim)
+        model.load_state_dict(torch.load(f"./saved-models/2024-07-18-00-57-01/{file}"))
+        population.append(model)
+    return population
